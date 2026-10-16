@@ -6,25 +6,18 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -73,9 +65,16 @@ fun CalculatorKeypad(
         view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
     }
 
+    // Adaptive sizing: when scientific keys are expanded, use compact button heights
+    // so the display area and typed numbers are always fully visible.
+    val sciKeyHeight = 36.dp
+    val standardKeyHeight = if (isScientific) 44.dp else 56.dp
+    val rowSpacing = if (isScientific) 5.dp else 8.dp
+    val colSpacing = if (isScientific) 5.dp else 8.dp
+
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(rowSpacing)
     ) {
         // Scientific Expansion Section
         AnimatedVisibility(
@@ -85,16 +84,17 @@ fun CalculatorKeypad(
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Top controls: Angle Mode (DEG/RAD) & Inverse (INV) toggles + sin, cos, tan
+                // Row 1: Angle Mode (DEG/RAD) & Inverse (INV) toggles + sin, cos, tan
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(colSpacing)
                 ) {
                     CalcKey(
                         text = if (angleMode == AngleMode.DEG) "DEG" else "RAD",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         isActive = true,
                         onClick = {
@@ -105,6 +105,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = "INV",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         isActive = isInverse,
                         onClick = {
@@ -115,6 +116,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = if (isInverse) "sin⁻¹" else "sin",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -124,6 +126,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = if (isInverse) "cos⁻¹" else "cos",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -133,6 +136,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = if (isInverse) "tan⁻¹" else "tan",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -144,11 +148,12 @@ fun CalculatorKeypad(
                 // Row 2: ln (or e^x), log (or 10^x), 1/x, e, π
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(colSpacing)
                 ) {
                     CalcKey(
                         text = if (isInverse) "eˣ" else "ln",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -158,6 +163,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = if (isInverse) "10ˣ" else "log",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -167,6 +173,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = "1/x",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -176,6 +183,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = "e",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -185,6 +193,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = "π",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -196,11 +205,12 @@ fun CalculatorKeypad(
                 // Row 3: sqrt (or x^2), power x^y, x!, |x|, ( )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(colSpacing)
                 ) {
                     CalcKey(
                         text = if (isInverse) "x²" else "√",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -210,6 +220,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = "xʸ",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -219,6 +230,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = "x!",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -228,6 +240,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = "|x|",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -237,6 +250,7 @@ fun CalculatorKeypad(
                     CalcKey(
                         text = "( )",
                         type = KeypadButtonType.FUNCTION,
+                        height = sciKeyHeight,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             triggerHaptic()
@@ -251,11 +265,12 @@ fun CalculatorKeypad(
         // Row 1: AC, ( ), %, ÷
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(colSpacing)
         ) {
             CalcKey(
                 text = "AC",
                 type = KeypadButtonType.CLEAR,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -265,6 +280,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "( )",
                 type = KeypadButtonType.FUNCTION,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -274,6 +290,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "%",
                 type = KeypadButtonType.FUNCTION,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -283,6 +300,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "÷",
                 type = KeypadButtonType.OPERATOR,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -294,11 +312,12 @@ fun CalculatorKeypad(
         // Row 2: 7, 8, 9, ×
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(colSpacing)
         ) {
             CalcKey(
                 text = "7",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -308,6 +327,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "8",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -317,6 +337,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "9",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -326,6 +347,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "×",
                 type = KeypadButtonType.OPERATOR,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -337,11 +359,12 @@ fun CalculatorKeypad(
         // Row 3: 4, 5, 6, −
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(colSpacing)
         ) {
             CalcKey(
                 text = "4",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -351,6 +374,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "5",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -360,6 +384,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "6",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -369,6 +394,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "−",
                 type = KeypadButtonType.OPERATOR,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -380,11 +406,12 @@ fun CalculatorKeypad(
         // Row 4: 1, 2, 3, +
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(colSpacing)
         ) {
             CalcKey(
                 text = "1",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -394,6 +421,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "2",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -403,6 +431,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "3",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -412,6 +441,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "+",
                 type = KeypadButtonType.OPERATOR,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -423,11 +453,12 @@ fun CalculatorKeypad(
         // Row 5: 0, ., ⌫, =
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(colSpacing)
         ) {
             CalcKey(
                 text = "0",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -437,6 +468,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = ".",
                 type = KeypadButtonType.DIGIT,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -448,10 +480,11 @@ fun CalculatorKeypad(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Backspace,
                         contentDescription = "Backspace",
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(if (isScientific) 19.dp else 22.dp)
                     )
                 },
                 type = KeypadButtonType.BACKSPACE,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -461,6 +494,7 @@ fun CalculatorKeypad(
             CalcKey(
                 text = "=",
                 type = KeypadButtonType.EQUALS,
+                height = standardKeyHeight,
                 modifier = Modifier.weight(1f),
                 onClick = {
                     triggerHaptic()
@@ -499,7 +533,7 @@ fun CalcKey(
         KeypadButtonType.DIGIT -> MaterialTheme.colorScheme.onSurface
     }
 
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(20.dp)
 
     Surface(
         modifier = modifier
@@ -513,16 +547,21 @@ fun CalcKey(
         tonalElevation = if (type == KeypadButtonType.DIGIT) 2.dp else 4.dp
     ) {
         Box(
-            modifier = Modifier.padding(4.dp),
+            modifier = Modifier.padding(2.dp),
             contentAlignment = Alignment.Center
         ) {
             if (icon != null) {
                 icon()
             } else if (text != null) {
+                val textSize = when {
+                    height < 40.dp -> if (text.length > 3) 11.sp else if (text.length > 2) 13.sp else 16.sp
+                    height < 50.dp -> if (text.length > 3) 13.sp else if (text.length > 2) 15.sp else 19.sp
+                    else -> if (text.length > 3) 14.sp else if (text.length > 2) 16.sp else 22.sp
+                }
                 Text(
                     text = text,
-                    fontSize = if (text.length > 3) 14.sp else if (text.length > 2) 16.sp else 22.sp,
-                    fontWeight = if (type == KeypadButtonType.EQUALS || type == KeypadButtonType.OPERATOR) FontWeight.Bold else FontWeight.Medium
+                    fontSize = textSize,
+                    fontWeight = if (type == KeypadButtonType.EQUALS || type == KeypadButtonType.OPERATOR || type == KeypadButtonType.DIGIT) FontWeight.SemiBold else FontWeight.Medium
                 )
             }
         }
