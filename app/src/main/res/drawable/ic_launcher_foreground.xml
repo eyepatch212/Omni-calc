@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Calculator body rounded rectangle (24, 21, w=60, h=66) -->
+    <path
+        android:fillColor="#383D68"
+        android:pathData="M32,22 h44 c5.52,0 10,4.48 10,10 v44 c0,5.52 -4.48,10 -10,10 h-44 c-5.52,0 -10,-4.48 -10,-10 v-44 c0,-5.52 4.48,-10 10,-10 Z" />
+    
+    <!-- Calculator Screen -->
+    <path
+        android:fillColor="#151728"
+        android:pathData="M30,28 h48 c2.2,0 4,1.8 4,4 v10 c0,2.2 -1.8,4 -4,4 h-48 c-2.2,0 -4,-1.8 -4,-4 v-10 c0,-2.2 1.8,-4 4,-4 Z" />
+    
+    <!-- Screen Accent / Indicator digits preview -->
+    <path
+        android:fillColor="#4ADE80"
+        android:pathData="M70,33 h4 v2 h-4 Z M64,37 h10 v2 h-10 Z" />
+
+    <!-- Key 1: + (Plus) -->
+    <path
+        android:fillColor="#4F568C"
+        android:pathData="M31,52 h10 c1.6,0 3,1.4 3,3 v6 c0,1.6 -1.4,3 -3,3 h-10 c-1.6,0 -3,-1.4 -3,-3 v-6 c0,-1.6 1.4,-3 3,-3 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M35,57.5 h2 v-2.5 h2 v2.5 h2 v2 h-2 v2.5 h-2 v-2.5 h-2 Z" />
+
+    <!-- Key 2: - (Minus) -->
+    <path
+        android:fillColor="#4F568C"
+        android:pathData="M49,52 h10 c1.6,0 3,1.4 3,3 v6 c0,1.6 -1.4,3 -3,3 h-10 c-1.6,0 -3,-1.4 -3,-3 v-6 c0,-1.6 1.4,-3 3,-3 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52.5,57.5 h7 v2 h-7 Z" />
+
+    <!-- Key 3: Convert (Arrows) -->
+    <path
+        android:fillColor="#6366F1"
+        android:pathData="M67,52 h10 c1.6,0 3,1.4 3,3 v6 c0,1.6 -1.4,3 -3,3 h-10 c-1.6,0 -3,-1.4 -3,-3 v-6 c0,-1.6 1.4,-3 3,-3 Z" />
+    <!-- Conversion 2 arrows glyph -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,56.5 h5 l-1.5,-1.5 l1,-1 l3.2,3.2 l-3.2,3.2 l-1,-1 l1.5,-1.5 h-5 Z" />
+
+    <!-- Key 4: % (Percent) -->
+    <path
+        android:fillColor="#4F568C"
+        android:pathData="M31,68 h10 c1.6,0 3,1.4 3,3 v6 c0,1.6 -1.4,3 -3,3 h-10 c-1.6,0 -3,-1.4 -3,-3 v-6 c0,-1.6 1.4,-3 3,-3 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34.5,71.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 Z M39,76.5 a1.2,1.2 0 1,0 2.4,0 a1.2,1.2 0 1,0 -2.4,0 Z M39.5,70.5 l1,0.8 l-5.5,7.2 l-1,-0.8 Z" />
+
+    <!-- Key 5: = (Equals) in vibrant accent color -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M49,68 h28 c1.6,0 3,1.4 3,3 v6 c0,1.6 -1.4,3 -3,3 h-28 c-1.6,0 -3,-1.4 -3,-3 v-6 c0,-1.6 1.4,-3 3,-3 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M59,72.5 h8 v1.8 h-8 Z M59,75.5 h8 v1.8 h-8 Z" />
+</vector>

@@ -1,0 +1,6 @@
+{
+  "name": "OmniCalc",
+  "description": "Material You Calculator with Basic & Scientific modes, history log, and 13 unit and financial converters (currency, tax, mortgage, molarity, BMI, and more).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
