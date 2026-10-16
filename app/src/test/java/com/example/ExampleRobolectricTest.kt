@@ -70,10 +70,13 @@ class ExampleRobolectricTest {
   }
 
   @Test
-  fun `unit conversion length`() {
-    val meters = UnitConverters.lengthUnits.first { it.id == "m" }
-    val feet = UnitConverters.lengthUnits.first { it.id == "ft" }
-    val converted = UnitConverters.convertLinear(1.0, meters, feet)
-    assertEquals(3.28084, converted, 0.001)
+  fun `currency conversion with dynamic rate calculation`() {
+    // 100 USD at 0.92 EUR rate
+    val convertedEur = FinancialAndScienceConverters.convertCurrency(100.0, 1.0, 0.92)
+    assertEquals(92.0, convertedEur, 0.001)
+
+    // 100 EUR to JPY (from EUR 0.92 to JPY 154.50)
+    val convertedJpy = FinancialAndScienceConverters.convertCurrency(100.0, 0.92, 154.50)
+    assertEquals(16793.478, convertedJpy, 0.01)
   }
 }

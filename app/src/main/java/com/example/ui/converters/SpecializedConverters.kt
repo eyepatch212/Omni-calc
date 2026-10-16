@@ -39,8 +39,22 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.draw.rotate
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.currency.CurrencyInfo
+import com.example.currency.CurrencyViewModel
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
@@ -78,30 +92,27 @@ import java.util.Locale
 @Composable
 fun CurrencyConverterScreen(
     onSaveToHistory: (expression: String, result: String, category: String) -> Unit,
+    currencyViewModel: CurrencyViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val currencies = FinancialAndScienceConverters.defaultCurrencies
-
-    var amountStr by remember { mutableStateOf("100") }
-    var fromCurrency by remember { mutableStateOf(currencies[0]) } // USD
-    var toCurrency by remember { mutableStateOf(currencies[1]) } // EUR
+    val uiState by currencyViewModel.uiState.collectAsStateWithLifecycle()
 
     var fromExpanded by remember { mutableStateOf(false) }
     var toExpanded by remember { mutableStateOf(false) }
 
-    val amount = amountStr.toDoubleOrNull() ?: 0.0
-    val converted = remember(amount, fromCurrency, toCurrency) {
-        FinancialAndScienceConverters.convertCurrency(
-            amount,
-            fromCurrency.defaultRateToUsd,
-            toCurrency.defaultRateToUsd
-        )
-    }
+    val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing)
+        ),
+        label = "sync_rotation"
+    )
 
     val symbols = DecimalFormatSymbols(Locale.US)
-    val moneyFormat = remember { DecimalFormat("#,##0.00", symbols) }
-    val formattedResult = remember(converted) { moneyFormat.format(converted) }
+    val rateFormat = remember { DecimalFormat("#,##0.0000", symbols) }
 
     Column(
         modifier = modifier
@@ -110,22 +121,85 @@ fun CurrencyConverterScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Daily Sync Status Banner Card
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(if (uiState.isUpdating) MaterialTheme.colorScheme.tertiary else Color(0xFF10B981))
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = if (uiState.isUpdating) "Updating Daily Rates..." else "Daily Exchange Rates Active",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = uiState.statusMessage ?: uiState.lastUpdatedText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = { currencyViewModel.refreshRates(force = true) },
+                    enabled = !uiState.isUpdating
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = "Update Rates Now",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = if (uiState.isUpdating) Modifier.rotate(rotation) else Modifier
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // FROM Card
         Card(
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("From", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "From",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = amountStr,
-                    onValueChange = { amountStr = it },
+                    value = uiState.amountString,
+                    onValueChange = { currencyViewModel.setAmount(it) },
                     label = { Text("Amount") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     shape = RoundedCornerShape(16.dp),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("currency_amount_input")
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 ExposedDropdownMenuBox(
@@ -134,7 +208,7 @@ fun CurrencyConverterScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = "${fromCurrency.code} - ${fromCurrency.name} (${fromCurrency.symbol})",
+                        value = "${uiState.fromCurrency.code} - ${uiState.fromCurrency.name} (${uiState.fromCurrency.symbol})",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Currency") },
@@ -146,11 +220,11 @@ fun CurrencyConverterScreen(
                         expanded = fromExpanded,
                         onDismissRequest = { fromExpanded = false }
                     ) {
-                        currencies.forEach { c ->
+                        uiState.availableCurrencies.forEach { c ->
                             DropdownMenuItem(
                                 text = { Text("${c.code} - ${c.name} (${c.symbol})") },
                                 onClick = {
-                                    fromCurrency = c
+                                    currencyViewModel.setFromCurrency(c)
                                     fromExpanded = false
                                 }
                             )
@@ -162,32 +236,36 @@ fun CurrencyConverterScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Swap Button
         FilledTonalIconButton(
-            onClick = {
-                val temp = fromCurrency
-                fromCurrency = toCurrency
-                toCurrency = temp
-            },
-            modifier = Modifier.size(48.dp)
+            onClick = { currencyViewModel.swapCurrencies() },
+            modifier = Modifier.size(48.dp).testTag("swap_currencies_button")
         ) {
             Icon(Icons.Default.SwapVert, contentDescription = "Swap Currencies")
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // TO Card
         Card(
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("To", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "To",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "${toCurrency.symbol} $formattedResult ${toCurrency.code}",
+                    text = "${uiState.toCurrency.symbol} ${uiState.formattedResult} ${uiState.toCurrency.code}",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.testTag("currency_converted_output")
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 ExposedDropdownMenuBox(
@@ -196,7 +274,7 @@ fun CurrencyConverterScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = "${toCurrency.code} - ${toCurrency.name} (${toCurrency.symbol})",
+                        value = "${uiState.toCurrency.code} - ${uiState.toCurrency.name} (${uiState.toCurrency.symbol})",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Target Currency") },
@@ -208,11 +286,11 @@ fun CurrencyConverterScreen(
                         expanded = toExpanded,
                         onDismissRequest = { toExpanded = false }
                     ) {
-                        currencies.forEach { c ->
+                        uiState.availableCurrencies.forEach { c ->
                             DropdownMenuItem(
                                 text = { Text("${c.code} - ${c.name} (${c.symbol})") },
                                 onClick = {
-                                    toCurrency = c
+                                    currencyViewModel.setToCurrency(c)
                                     toExpanded = false
                                 }
                             )
@@ -224,23 +302,31 @@ fun CurrencyConverterScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Exchange rate info card
-        val oneFromInTo = FinancialAndScienceConverters.convertCurrency(1.0, fromCurrency.defaultRateToUsd, toCurrency.defaultRateToUsd)
+        // Live Exchange Rate Card
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 Text(
-                    text = "1 ${fromCurrency.code} = ${moneyFormat.format(oneFromInTo)} ${toCurrency.code}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                    text = "1 ${uiState.fromCurrency.code} = ${rateFormat.format(uiState.unitExchangeRate)} ${uiState.toCurrency.code}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                val inverseRate = if (uiState.unitExchangeRate > 0) 1.0 / uiState.unitExchangeRate else 0.0
                 Text(
-                    text = "Standard benchmark rates • Offline ready",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = "1 ${uiState.toCurrency.code} = ${rateFormat.format(inverseRate)} ${uiState.fromCurrency.code}",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Daily benchmark rates updated automatically • Fully cached for offline use",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -254,8 +340,8 @@ fun CurrencyConverterScreen(
             OutlinedButton(
                 onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("Currency", "$formattedResult ${toCurrency.code}"))
-                    Toast.makeText(context, "Copied $formattedResult ${toCurrency.code}", Toast.LENGTH_SHORT).show()
+                    clipboard.setPrimaryClip(ClipData.newPlainText("Currency", "${uiState.formattedResult} ${uiState.toCurrency.code}"))
+                    Toast.makeText(context, "Copied ${uiState.formattedResult} ${uiState.toCurrency.code}", Toast.LENGTH_SHORT).show()
                 },
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.weight(1f)
@@ -267,8 +353,8 @@ fun CurrencyConverterScreen(
 
             Button(
                 onClick = {
-                    val expr = "$amountStr ${fromCurrency.code} to ${toCurrency.code}"
-                    val res = "$formattedResult ${toCurrency.code}"
+                    val expr = "${uiState.amountString} ${uiState.fromCurrency.code} to ${uiState.toCurrency.code}"
+                    val res = "${uiState.formattedResult} ${uiState.toCurrency.code}"
                     onSaveToHistory(expr, res, "currency")
                     Toast.makeText(context, "Saved to history", Toast.LENGTH_SHORT).show()
                 },
